@@ -1,4 +1,6 @@
 node_modules/
 
 dist/
+dist-rcade/
 .vite/
+.DS_Store

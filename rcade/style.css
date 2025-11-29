@@ -1,0 +1,621 @@
+:root {
+  /* Colors */
+  --color-bg: #1a1a2e;
+  --color-text: #a3a3a3;
+  --color-white: #fff;
+  --color-black-alpha: rgba(0, 0, 0, 0.7);
+
+  --color-round: #fff;
+  --color-win: #4caf50;
+  --color-lose: #f44336;
+  --color-recurse-green: #23a050;
+
+  /* Original miRCo size */
+  --game-width: 800px;
+  --game-height: 600px;
+
+  /* RCade arcade cabinet display size */
+  --arcade-width: 336px;
+  --arcade-height: 262px;
+
+  /* Typography */
+  --font-family: 'Courier New', Courier, monospace;
+  --font-size-small: 14px;
+  --font-size-medium: 20px;
+  --font-size-large: 28px;
+
+  /* Layers */
+  --z-overlay: 1000;
+
+  /* Animations */
+  --bounce-curve: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+/* Main container - fixed to arcade size, clips overflow */
+#app {
+  position: relative;
+  width: var(--arcade-width);
+  height: var(--arcade-height);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* Game wrapper - full miRCo size, zoomed down to fit */
+.game-wrapper {
+  width: var(--game-width);
+  /* Extra height to cover full arcade display (262/0.42 ≈ 624) */
+  height: 624px;
+  position: relative;
+  /* zoom scales everything inside uniformly */
+  zoom: 0.42;
+  /* Fallback for browsers that don't support zoom */
+  -moz-transform: scale(0.42);
+  -moz-transform-origin: 0 0;
+}
+
+/* Start screen - not zoomed */
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--color-white);
+  text-align: center;
+}
+
+.start-screen h1 {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--color-recurse-green);
+}
+
+.start-screen p {
+  font-size: 0.8em;
+  animation: pulsate-text 1s infinite;
+}
+
+/* Score overlay - at top */
+.score-overlay {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  font-family: var(--font-family);
+  font-size: var(--font-size-medium);
+  font-weight: bold;
+  color: var(--color-white);
+  z-index: var(--z-overlay);
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.score-overlay .round {
+  color: var(--color-round);
+}
+
+.score-overlay .wins {
+  color: var(--color-win);
+}
+
+.score-overlay .losses {
+  color: var(--color-lose);
+}
+
+/* Canvas */
+canvas {
+  display: block;
+  background: var(--color-white);
+}
+
+/* Timer overlay - just above author text */
+.timer-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 6px;
+  background: var(--color-black-alpha);
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: var(--z-overlay);
+  opacity: 0.8;
+}
+
+.timer-progress {
+  width: 100%;
+  height: 100%;
+  background: var(--color-white);
+  transition: width linear;
+}
+
+/* Instruction overlay - covers game area */
+.instruction-overlay {
+  font-family: var(--font-family);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-black-alpha);
+  color: var(--color-white);
+  font-size: var(--font-size-large);
+  text-align: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: var(--z-overlay);
+}
+
+.instruction-overlay.visible {
+  opacity: 1;
+  animation:
+    bounceIn 0.2s var(--bounce-curve) forwards,
+    fadeOut 0.15s ease forwards 0.35s;
+}
+
+/* Author overlay - below timer bar, near bottom */
+.author-overlay {
+  position: absolute;
+  bottom: 2px;
+  right: 40px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-small);
+  color: var(--color-text);
+  text-align: right;
+  z-index: calc(var(--z-overlay) - 1);
+}
+
+/* Interstitial overlay - between games */
+.interstitial-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9998;
+}
+
+.interstitial-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.interstitial-logo {
+  --start-rotation: 0deg;
+  width: 300px;
+  height: auto;
+  transform: rotate(var(--start-rotation));
+}
+
+/* Spin clockwise */
+.interstitial-logo.anim-spin {
+  animation: interstitial-spin 1s ease-in-out;
+}
+
+/* Spin counter-clockwise */
+.interstitial-logo.anim-spin-reverse {
+  animation: interstitial-spin-reverse 1s ease-in-out;
+}
+
+/* Zoom in quickly */
+.interstitial-logo.anim-zoom-in {
+  animation: interstitial-zoom-in 0.8s ease-out;
+}
+
+/* 3D flip */
+.interstitial-logo.anim-spin-3d {
+  animation: interstitial-spin-3d 1s ease-in-out;
+}
+
+/* Wobble */
+.interstitial-logo.anim-wobble {
+  animation: interstitial-wobble 0.8s ease-in-out;
+}
+
+/* Pulse while spinning */
+.interstitial-logo.anim-pulse-spin {
+  animation: interstitial-pulse-spin 1s ease-in-out;
+}
+
+@keyframes interstitial-spin {
+  from {
+    transform: rotate(var(--start-rotation));
+  }
+  to {
+    transform: rotate(calc(var(--start-rotation) + 360deg));
+  }
+}
+
+@keyframes interstitial-spin-reverse {
+  from {
+    transform: rotate(var(--start-rotation));
+  }
+  to {
+    transform: rotate(calc(var(--start-rotation) - 360deg));
+  }
+}
+
+@keyframes interstitial-zoom-in {
+  0% {
+    transform: rotate(var(--start-rotation)) scale(0.1);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) scale(1);
+  }
+}
+
+@keyframes interstitial-spin-3d {
+  0% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateY(0deg);
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateY(360deg);
+  }
+}
+
+@keyframes interstitial-wobble {
+  0%, 100% {
+    transform: rotate(var(--start-rotation));
+  }
+  25% {
+    transform: rotate(calc(var(--start-rotation) + 25deg)) scale(1.1);
+  }
+  50% {
+    transform: rotate(calc(var(--start-rotation) - 20deg)) scale(0.9);
+  }
+  75% {
+    transform: rotate(calc(var(--start-rotation) + 15deg)) scale(1.05);
+  }
+}
+
+@keyframes interstitial-pulse-spin {
+  0% {
+    transform: rotate(var(--start-rotation)) scale(1);
+  }
+  25% {
+    transform: rotate(calc(var(--start-rotation) + 90deg)) scale(1.2);
+  }
+  50% {
+    transform: rotate(calc(var(--start-rotation) + 180deg)) scale(0.8);
+  }
+  75% {
+    transform: rotate(calc(var(--start-rotation) + 270deg)) scale(1.1);
+  }
+  100% {
+    transform: rotate(calc(var(--start-rotation) + 360deg)) scale(1);
+  }
+}
+
+/* Slide from right to center */
+@keyframes interstitial-slide-left {
+  0% {
+    transform: rotate(var(--start-rotation)) translateX(400px);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Slide from left to center */
+@keyframes interstitial-slide-right {
+  0% {
+    transform: rotate(var(--start-rotation)) translateX(-400px);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Slide from bottom */
+@keyframes interstitial-slide-up {
+  0% {
+    transform: rotate(var(--start-rotation)) translateY(300px);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Slide from top */
+@keyframes interstitial-slide-down {
+  0% {
+    transform: rotate(var(--start-rotation)) translateY(-300px);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Swipe in with overshoot */
+@keyframes interstitial-swipe-in {
+  0% {
+    transform: rotate(var(--start-rotation)) translateX(500px) scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: rotate(var(--start-rotation)) translateX(-30px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateX(0) scale(1);
+  }
+}
+
+/* Fade with scale */
+@keyframes interstitial-fade-scale {
+  0% {
+    transform: rotate(var(--start-rotation)) scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Bounce in from top */
+@keyframes interstitial-bounce-in {
+  0% {
+    transform: rotate(var(--start-rotation)) translateY(-400px);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(var(--start-rotation)) translateY(30px);
+  }
+  70% {
+    transform: rotate(var(--start-rotation)) translateY(-15px);
+  }
+  85% {
+    transform: rotate(var(--start-rotation)) translateY(8px);
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Flip X axis */
+@keyframes interstitial-flip-x {
+  0% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateX(-90deg);
+    opacity: 0;
+  }
+  60% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateX(20deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateX(0deg);
+  }
+}
+
+/* Flip Y axis */
+@keyframes interstitial-flip-y {
+  0% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateY(-90deg);
+    opacity: 0;
+  }
+  60% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateY(20deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) perspective(500px) rotateY(0deg);
+  }
+}
+
+/* Spiral in */
+@keyframes interstitial-spiral {
+  0% {
+    transform: rotate(calc(var(--start-rotation) - 720deg)) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Elastic in */
+@keyframes interstitial-elastic-in {
+  0% {
+    transform: rotate(var(--start-rotation)) scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: rotate(var(--start-rotation)) scale(1.3);
+  }
+  60% {
+    transform: rotate(var(--start-rotation)) scale(0.85);
+  }
+  80% {
+    transform: rotate(var(--start-rotation)) scale(1.1);
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Drop with bounce */
+@keyframes interstitial-drop-bounce {
+  0% {
+    transform: rotate(var(--start-rotation)) translateY(-500px) scaleY(1.5) scaleX(0.8);
+    opacity: 0;
+  }
+  30% {
+    transform: rotate(var(--start-rotation)) translateY(0) scaleY(0.8) scaleX(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(var(--start-rotation)) translateY(-40px) scaleY(1.1) scaleX(0.95);
+  }
+  70% {
+    transform: rotate(var(--start-rotation)) translateY(0) scaleY(0.95) scaleX(1.02);
+  }
+  85% {
+    transform: rotate(var(--start-rotation)) translateY(-10px);
+  }
+  100% {
+    transform: rotate(var(--start-rotation)) translateY(0) scale(1);
+  }
+}
+
+/* Animation classes with different easings */
+.interstitial-logo.anim-slide-left {
+  animation: interstitial-slide-left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.interstitial-logo.anim-slide-right {
+  animation: interstitial-slide-right 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.interstitial-logo.anim-slide-up {
+  animation: interstitial-slide-up 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.interstitial-logo.anim-slide-down {
+  animation: interstitial-slide-down 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.interstitial-logo.anim-swipe-in {
+  animation: interstitial-swipe-in 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.interstitial-logo.anim-fade-scale {
+  animation: interstitial-fade-scale 0.8s ease-out;
+}
+
+.interstitial-logo.anim-bounce-in {
+  animation: interstitial-bounce-in 1s cubic-bezier(0.36, 0, 0.66, -0.56);
+}
+
+.interstitial-logo.anim-flip-x {
+  animation: interstitial-flip-x 0.8s ease-out;
+}
+
+.interstitial-logo.anim-flip-y {
+  animation: interstitial-flip-y 0.8s ease-out;
+}
+
+.interstitial-logo.anim-spiral {
+  animation: interstitial-spiral 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.interstitial-logo.anim-elastic-in {
+  animation: interstitial-elastic-in 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.interstitial-logo.anim-drop-bounce {
+  animation: interstitial-drop-bounce 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Splash/Error overlays */
+.start-splash-overlay,
+.error-splash-overlay {
+  font-family: var(--font-family);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--color-black-alpha);
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.error-splash-overlay {
+  background: #ff7f7f;
+  color: white;
+}
+
+.error-splash-content {
+  text-align: center;
+  font-size: var(--font-size-medium);
+  padding: 20px;
+}
+
+@keyframes pulsate-text {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}

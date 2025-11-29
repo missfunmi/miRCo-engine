@@ -1,0 +1,15 @@
+{
+  "name": "mirco",
+  "display_name": "miRCo Engine",
+  "description": "micro games in rapid succession - press directions to win!",
+  "visibility": "public",
+  "authors": {
+    "display_name": "miRCo team (claire f, jack r, jonathan r, port by greg s)"
+  },
+  "dependencies": [
+    {
+      "name": "@rcade/input-classic",
+      "version": "1.0.0"
+    }
+  ]
+}
