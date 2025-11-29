@@ -70,7 +70,19 @@ export class RcadeUIManager {
       'zoom-in',
       'spin-3d',
       'wobble',
-      'pulse-spin'
+      'pulse-spin',
+      'slide-left',
+      'slide-right',
+      'slide-up',
+      'slide-down',
+      'swipe-in',
+      'fade-scale',
+      'bounce-in',
+      'flip-x',
+      'flip-y',
+      'spiral',
+      'elastic-in',
+      'drop-bounce'
     ]
     const randomAnim = animations[Math.floor(Math.random() * animations.length)]
 
@@ -82,12 +94,29 @@ export class RcadeUIManager {
     logo.className = `interstitial-logo anim-${randomAnim}`
 
     this.interstitialOverlay.style.display = 'flex'
+    this.authorOverlay.style.display = 'none'
+    this.timerOverlay.style.display = 'none'
 
-    setTimeout(() => {
-      this.interstitialOverlay.style.display = 'none'
-      logo.className = 'interstitial-logo'
-      if (callback) callback()
-    }, INTERSTITIAL_DURATION)
+    // Start loading immediately, but ensure minimum animation time
+    const startTime = Date.now()
+    if (callback) {
+      callback().then(() => {
+        const elapsed = Date.now() - startTime
+        const remaining = Math.max(0, INTERSTITIAL_DURATION - elapsed)
+        setTimeout(() => {
+          this.hideInterstitial()
+          logo.className = 'interstitial-logo'
+          // Signal that interstitial is done via custom event
+          this.container.dispatchEvent(new CustomEvent('interstitial-done'))
+        }, remaining)
+      })
+    }
+  }
+
+  hideInterstitial() {
+    this.interstitialOverlay.style.display = 'none'
+    this.authorOverlay.style.display = ''
+    this.timerOverlay.style.display = ''
   }
 
   // Returns the game wrapper so canvas gets added inside it

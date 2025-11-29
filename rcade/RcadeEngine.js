@@ -45,6 +45,11 @@ export class RcadeEngine {
       wins: 0,
       losses: 0,
     }
+
+    // Listen for interstitial done to start the loaded game
+    this.container.addEventListener('interstitial-done', () => {
+      this.startCurrentGame()
+    })
   }
 
   async init() {
@@ -56,10 +61,11 @@ export class RcadeEngine {
     this.ui.updateDirectory(allGameManifests)
   }
 
-  triggerGameplayStart = () => {
+  triggerGameplayStart = async () => {
     this.gameLoopStarted = true
     this.ui.hideSplash()
-    this.playNext()
+    await this.playNext()
+    this.startCurrentGame()
   }
 
   async playNext() {
@@ -89,17 +95,10 @@ export class RcadeEngine {
         libs: { ...this.libs, p5: p5Instance },
       })
 
-      // show instruction (timed) and author info
-      this.ui.showGameInfo(next.manifest)
-
       this.currentGame.init(this.canvas)
 
-      this.startGameLoop()
-
-      // Automatically end game after time
-      this.ui.gameTimer = setTimeout(() => {
-        this.endGame(true) // win by default if time expires
-      }, GAME_DURATION)
+      // Store next game info so we can start it after interstitial hides
+      this.pendingGameStart = { manifest: next.manifest }
     } catch (err) {
       console.error(
         `Failed to play ${next.manifest?.name || 'game'}:`,
@@ -110,6 +109,23 @@ export class RcadeEngine {
       this.ui.showErrorPlayingGame(next.manifest?.name || 'game')
       setTimeout(() => this.playNext(), 2000) // Skip to next game
     }
+  }
+
+  // Called after interstitial hides to actually start the game
+  startCurrentGame() {
+    if (!this.pendingGameStart) return
+
+    // show instruction (timed) and author info
+    this.ui.showGameInfo(this.pendingGameStart.manifest)
+
+    this.startGameLoop()
+
+    // Automatically end game after time
+    this.ui.gameTimer = setTimeout(() => {
+      this.endGame(true) // win by default if time expires
+    }, GAME_DURATION)
+
+    this.pendingGameStart = null
   }
 
   startGameLoop() {
@@ -188,10 +204,8 @@ export class RcadeEngine {
     // reset timer
     this.ui.resetTimer()
 
-    // Show interstitial, then start next game
-    this.ui.showInterstitial(() => {
-      this.playNext()
-    })
+    // Show interstitial while loading next game
+    this.ui.showInterstitial(() => this.playNext())
   }
 
   updateScore(won) {
