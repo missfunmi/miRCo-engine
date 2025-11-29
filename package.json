@@ -10,9 +10,12 @@
     "preview": "vite preview",
     "serve": "NODE_ENV=production node server.js",
     "start": "npm run build && npm run serve",
-    "format": "prettier . --write"
+    "format": "prettier . --write",
+    "dev-rcade": "concurrently \"vite --config vite.config.rcade.js --port 5173 --strictPort\" \"rcade dev http://localhost:5173\"",
+    "build-rcade": "vite build --config vite.config.rcade.js"
   },
   "dependencies": {
+    "@rcade/plugin-input-classic": "^0.1.4",
     "express": "^4.18.2",
     "howler": "^2.2.4",
     "p5": "^2.0.2"
@@ -21,6 +24,7 @@
     "concurrently": "^9.1.2",
     "nodemon": "^3.0.0",
     "prettier": "^3.5.3",
+    "rcade": "^0.0.19",
     "vite": "^6.3.5",
     "vite-plugin-live-reload": "^3.0.4"
   },
