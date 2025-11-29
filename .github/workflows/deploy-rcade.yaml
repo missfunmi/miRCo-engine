@@ -28,4 +28,4 @@ jobs:
         uses: fcjr/rcade/action-deploy@main
         with:
           artifactPath: ./dist-rcade
-          manifestPath: ./rcade/manifest.json
+          manifestPath: ./rcade.manifest.json
