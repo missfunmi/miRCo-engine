@@ -212,6 +212,7 @@ export class RcadeEngine {
         const canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT)
         this.canvas = canvas
         canvas.parent(gameContainer)
+        p.textFont('Twemoji, sans-serif')
         p.noLoop() // game manager will control looping
       }
     }, gameContainer)
