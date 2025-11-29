@@ -3,9 +3,25 @@
   "display_name": "miRCo Engine",
   "description": "micro games in rapid succession - press directions to win!",
   "visibility": "public",
-  "authors": {
-    "display_name": "miRCo team (claire f, jack r, jonathan r, port by greg s)"
-  },
+  "authors": [
+    {
+      "display_name": "Claire Froelich",
+      "recurse_id": 6727
+    },
+    {
+      "display_name": "Jack Ratner",
+      "recurse_id": 6651
+    },
+    {
+      "display_name": "Jonathan Rippy",
+      "recurse_id": 3531
+    },
+    {
+      "display_name": "Greg Sadetsky",
+      "recurse_id": 5910,
+      "description": "Ported to RCade API"
+    }
+  ],
   "dependencies": [
     {
       "name": "@rcade/input-classic",
