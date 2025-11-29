@@ -4,7 +4,7 @@
   "description": "micro games in rapid succession - press directions to win!",
   "visibility": "public",
   "authors": {
-    "display_name": "miRCo team (claire, port by greg)"
+    "display_name": "miRCo team (claire f, jack r, jonathon r, port by greg)"
   },
   "dependencies": [
     {
