@@ -46,8 +46,6 @@ export class MircoEngine {
       wins: 0,
       losses: 0,
     }
-
-    this.setupKeyboardEventListeners()
   }
 
   async init() {
@@ -73,11 +71,6 @@ export class MircoEngine {
       // start gameplay rigth away
       this.triggerGameplayStart()
     }
-  }
-
-  setupKeyboardEventListeners() {
-    window.addEventListener('keydown', (e) => this.input.curKeys.add(e.key))
-    window.addEventListener('keyup', (e) => this.input.curKeys.delete(e.key))
   }
 
   triggerGameplayStart = () => {
