@@ -15,7 +15,7 @@
     "build-rcade": "vite build --config vite.config.rcade.js"
   },
   "dependencies": {
-    "@rcade/plugin-input-classic": "^0.1.4",
+    "@rcade/plugin-input-classic": "^0.2.1",
     "express": "^4.18.2",
     "howler": "^2.2.4",
     "p5": "^2.0.2"
