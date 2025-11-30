@@ -5,7 +5,6 @@ export default class MicroGame {
     this.libs = libs
     this.mirco = mirco
 
-    this.keysPressed = new Set()
     this.state = {
       gameOver: false,
       won: false,
@@ -30,45 +29,69 @@ export default class MicroGame {
       },
       helpMessage: { show: false, startTime: 0 },
     }
-
-    const p5 = this.libs.p5
-
-    p5.keyPressed = () => {
-      const key = p5.key
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
-        this.keysPressed.add(key)
-        if (!this.state.autoMoving) {
-          if (this.allArrowsPressed() && !this.state.resurrection.active)
-            this.startAutoMove()
-          else this.handleMove(key)
-        }
-      }
-    }
-
-    p5.keyReleased = () => {
-      const key = p5.key
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
-        this.keysPressed.delete(key)
-        if (this.state.autoMoving) {
-          this.state.autoMoving = false
-          this.state.autoMovePath = []
-          this.state.glitch.intensity = 0
-          if (!this.state.resurrection.active) {
-            this.state.helpMessage.show = false
-            this.state.helpMessage.startTime = p5.millis()
-          }
-        }
-      }
-    }
   }
 
   allArrowsPressed() {
     return (
-      this.keysPressed.has('ArrowUp') &&
-      this.keysPressed.has('ArrowDown') &&
-      this.keysPressed.has('ArrowLeft') &&
-      this.keysPressed.has('ArrowRight')
+      this.input.isPressedUp() &&
+      this.input.isPressedDown() &&
+      this.input.isPressedLeft() &&
+      this.input.isPressedRight()
     )
+  }
+
+  handleInput() {
+    const p5 = this.libs.p5
+
+    // Handle just pressed keys for movement
+    if (!this.state.autoMoving) {
+      if (this.input.justPressedUp()) {
+        if (this.allArrowsPressed() && !this.state.resurrection.active) {
+          this.startAutoMove()
+        } else {
+          this.handleMove('ArrowUp')
+        }
+      }
+      if (this.input.justPressedDown()) {
+        if (this.allArrowsPressed() && !this.state.resurrection.active) {
+          this.startAutoMove()
+        } else {
+          this.handleMove('ArrowDown')
+        }
+      }
+      if (this.input.justPressedLeft()) {
+        if (this.allArrowsPressed() && !this.state.resurrection.active) {
+          this.startAutoMove()
+        } else {
+          this.handleMove('ArrowLeft')
+        }
+      }
+      if (this.input.justPressedRight()) {
+        if (this.allArrowsPressed() && !this.state.resurrection.active) {
+          this.startAutoMove()
+        } else {
+          this.handleMove('ArrowRight')
+        }
+      }
+    }
+
+    // Handle key releases to stop auto-moving
+    if (this.state.autoMoving) {
+      if (
+        this.input.releasedUp() ||
+        this.input.releasedDown() ||
+        this.input.releasedLeft() ||
+        this.input.releasedRight()
+      ) {
+        this.state.autoMoving = false
+        this.state.autoMovePath = []
+        this.state.glitch.intensity = 0
+        if (!this.state.resurrection.active) {
+          this.state.helpMessage.show = false
+          this.state.helpMessage.startTime = p5.millis()
+        }
+      }
+    }
   }
 
   init(canvas) {
@@ -287,6 +310,8 @@ export default class MicroGame {
   }
 
   update(dt) {
+    this.handleInput()
+
     const p5 = this.libs.p5
     const state = this.state
     const r = state.resurrection
