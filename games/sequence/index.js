@@ -7,10 +7,10 @@ export default class MircoGame {
 
     console.log(this.input)
     this.lookup = {
-      '⬆️': this.input.isPressedUp,
-      '⬇️': this.input.isPressedDown,
-      '⬅️': this.input.isPressedLeft,
-      '➡️': this.input.isPressedRight,
+      '⬆️': () => this.input.isPressedUp(),
+      '⬇️': () => this.input.isPressedDown(),
+      '⬅️': () => this.input.isPressedLeft(),
+      '➡️': () => this.input.isPressedRight(),
     }
 
     this.state = {
@@ -91,17 +91,9 @@ export default class MircoGame {
       return
     }
 
-    var funcs = [
-      this.input.isPressedLeft,
-      this.input.isPressedRight,
-      this.input.isPressedUp,
-      this.input.isPressedDown,
-    ]
-    var i = funcs.indexOf(targetFunction)
-    funcs.splice(i, 1)
-
-    for (var j = 0; j < funcs.length; j++) {
-      if (funcs[j]()) {
+    var allDirections = ['⬆️', '⬇️', '⬅️', '➡️']
+    for (var j = 0; j < allDirections.length; j++) {
+      if (allDirections[j] !== target && this.lookup[allDirections[j]]()) {
         console.log('Wrong button pressed')
         state.gameOver = true
         state.message = 'Wrong!'
