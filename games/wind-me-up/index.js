@@ -198,7 +198,7 @@ export default class MircoGame {
     p5.pop()
 
     // Draw inner circle
-    let innerCircleFill = 100
+    let innerCircleFill = 240
     p5.push()
     p5.translate(cx, cy)
     p5.stroke(innerCircleFill)
